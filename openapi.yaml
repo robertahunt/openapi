@@ -9,9 +9,9 @@ info:
     email: api@electricitymap.org
     url: http://electricitymap.org
   x-logo:
-    url: "https://redocly.github.io/redoc/petstore-logo.png"
+    url: "http://static.electricitymap.org/api/docs/images/logo.png"
     backgroundColor: "#FFFFFF"
-    altText: "Petstore logo"
+    altText: "electricityMap logo"
 #  license:
 #    name: Apache 2.0
 #    url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -21,7 +21,7 @@ paths:
   /carbon-intensity/latest:
     get:
       summary: Get live carbon intensity
-      description: |
+      description: |-
         This endpoint retrieves the last known carbon intensity (in gCO2eq/kWh) of electricity consumed in an area.
         
         It can either be queried by zone identifier or by geolocation (latitude and longitude).
@@ -31,8 +31,10 @@ paths:
         - $ref: '#/components/parameters/lat'
         - $ref: '#/components/parameters/lon'  
       x-code-samples:
-        - lang: PHP
-          source: "Blahblah"
+        - lang: Shell
+          source: |- 
+            curl 'https://api.electricitymap.org/v3/carbon-intensity/latest?zone=DE' 
+            -H 'auth-token: myapitoken'
 
       responses:
         200:
