@@ -23,9 +23,30 @@ info:
 #    url: https://www.apache.org/licenses/LICENSE-2.0.html
 servers:
   - url: http://api.electricitymap.org
+tags:
+  - name: zones
+    description: |
+      Get zone related information
+  - name: Carbon Intensity
+    description: |
+      Access latest, historical and forecasted carbon intensity data
+  - name: Power Production
+    description: |
+      Access latest, historical and forecasted power production data
+  - name: Power Consumption
+    description: |
+      Access latest, historical and forecasted power consumption data
+  - name: Power Breakdown
+    description: |
+      Access latest, historical and forecasted power breakdown data
+  - name: Marginal Forecasts
+    description: |
+      Access forecasted marginal power consumption and carbon intensity data
 paths:
   /carbon-intensity/latest:
     get:
+      tags: 
+        - Carbon Intensity
       summary: Get live carbon intensity
       description: |-
         This endpoint retrieves the last known carbon intensity (in gCO2eq/kWh) of electricity consumed in an area.
@@ -70,6 +91,8 @@ paths:
                 
   /power-production-breakdown/latest:
     get:
+      tags: 
+        - Power Production
       summary: Get live power production intensity
       description: |
         This endpoint retrieves the last known electricity production in the zone, broken down by production type. It can either be queried by zone identifier or by geolocation.
@@ -104,9 +127,13 @@ components:
 
   securitySchemes:
     ApiKeyAuth:
+      description: |
+        The API key should be included as a header in all requests:
+        auth-token: myapitoken
+        (replace 'myapitoken' with your token)
       type: apiKey
       in: header
-      name: API Key
+      name: auth-token
 
   parameters:
     zone: 
@@ -225,46 +252,46 @@ components:
         
   responses:
     error400:  
-      description: 400 Indicates something wrong with the request. For example, if 'zone' or 'lat'/'lon' were not specified, or if the zone is invalid, or if a required parameter was not supplied.
+      description: Something wrong with the request. For example, if a required parameter was not supplied or is invalid.
       content:
         application/json:
           schema:
             type: object
             properties:
-              status: 
-                example: 400
               error:
+                type: string
+                description: error message
                 example: 'Zone "OZ" does not exist'
     error401Forbidden:
-      description: 401 Forbidden. API key not recognized for this request.
+      description: Forbidden. API key not recognized for this request.
       content:
         application/json:
           schema:
             type: object
             properties:
-              status: 
-                example: 401
               error:
+                type: string
+                description: error message
                 example: 'Invalid auth-token'
     error404zone:  
-      description: 404 zone not valid for this request type (but may be in the future). For example, we may not have a forecast trained for that zone at the moment, but we may add this at a later date.
+      description: zone not valid for this request type (but may be in the future). 
       content:
         application/json:
           schema:
             type: object
             properties:
-              status: 
-                example: 404
               error:
+                type: string
+                description: error message
                 example: "Zone 'RU' does not have a forecast for 'carbon-intensity'"
     error500unknown:  
-      description: 500 Internal server error
+      description: Internal server error
       content:
         application/json:
           schema:
             type: object
             properties:
-              status: 
-                example: 500
               error:
+                type: string
+                description: error message
                 example: 'Internal Server Error'
