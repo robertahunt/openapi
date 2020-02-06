@@ -1,0 +1,260 @@
+openapi: "3.0.0"
+info:
+  version: 3.1.0
+  title: Electricity Map API Documentation
+  description: Welcome to the Electricity Map API! You can use our API to get access to information about where the electricity in a specific area comes from and how much carbon was emitted to produce it. Furthermore, you can use this API to get historical data, live data and forecasts.
+  #termsOfService: http://swagger.io/terms/
+  contact:
+    name: Electricity Map Team
+    email: api@electricitymap.org
+    url: http://electricitymap.org
+#  license:
+#    name: Apache 2.0
+#    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://api.electricitymap.org
+paths:
+  /carbon-intensity/latest:
+    get:
+      summary: Get live carbon intensity
+      description: |
+        This endpoint retrieves the last known carbon intensity (in gCO2eq/kWh) of electricity consumed in an area.
+        
+        It can either be queried by zone identifier or by geolocation (latitude and longitude).
+      operationId: getLatestCarbonIntensity
+      parameters:
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/lat'
+        - $ref: '#/components/parameters/lon'
+      x-code-samples: 
+        lang: Shell
+        source: "curl 'https://api.electricitymap.org/v3/carbon-intensity/latest?zone=DE'  -H 'auth-token: myapitoken'"
+
+      responses:
+        200:
+          description: Live carbon intensity for specified zone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/zone'
+                  - $ref: '#/components/schemas/carbonIntensity'
+                  - $ref: '#/components/schemas/datetime'
+                  - $ref: '#/components/schemas/updatedAt'
+        '400':
+          description: Zone does not exist.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/responses/error400zone'
+        '404':
+          description: Zone exists, but is invalid for this request type. Most likely we do not yet have live data for this zone.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/responses/error404zone'
+              
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/error500unknown'
+                
+  /power-production-breakdown/latest:
+    get:
+      summary: Get live power production intensity
+      description: |
+        This endpoint retrieves the last known electricity production in the zone, broken down by production type. It can either be queried by zone identifier or by geolocation.
+      operationId: getLatestPowerProductionBreakdown
+      parameters:
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/lat'
+        - $ref: '#/components/parameters/lon'
+      responses:
+        200:
+          description: Live power production breakdown for specified zone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/zone'
+                  - $ref: '#/components/schemas/datetime'
+                  - $ref: '#/components/schemas/powerProductionBreakdown'
+                  - $ref: '#/components/schemas/fossilFreePercentage'
+                  - $ref: '#/components/schemas/renewablePercentage'
+                  - $ref: '#/components/schemas/updatedAt'
+
+components:
+
+  parameters:
+    zone: 
+      in: query
+      name: zone
+      required: false
+      schema:
+        type: string
+      description:
+        The zone key. Required if latitude and longitude are not specified.
+    lat: 
+      in: query
+      name: lat
+      required: false
+      schema:
+        type: string
+      description:
+        The latitude of the location. Must be specified with the 'lon' parameter. If the latitude and longitude are specified instead of the zone, the zone will be determined automatically from the geographical location. Required if zone is not specified.
+    lon: 
+      in: query
+      name: lon
+      required: false
+      schema:
+        type: string
+      description:
+        The longitude of the location. Must be specified with the 'lat' parameter. If the latitude and longitude are specified instead of the zone, the zone will be determined automatically from the geographical location.
+        
+  examples:
+    carbonIntensity: 
+      value: 10
+
+  schemas:
+    zone:
+      type: object
+      properties:
+        zone:
+          type: string
+          example: DE
+          
+    carbonIntensity:
+      type: object
+      properties:
+        carbonIntensity:
+          type: integer
+          format: int64
+          example: 302
+          
+    datetime:
+      type: object
+      properties:
+        datetime:
+          type: string
+          format: date-time
+          example: '2018-04-25T18:07:00.350Z'
+          
+    updatedAt:
+      type: object
+      properties:
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2018-04-25T18:07:01.000Z'
+          
+    powerProductionBreakdown:
+      type: object
+      properties:
+        powerProductionBreakdown:
+          type: object
+          properties:
+            biomass:
+              type: integer
+              example: 666
+            coal:
+              type: integer
+              example: 200
+            solar:
+              type: integer
+              example: 200
+            nuclear:
+              type: integer
+              example: 200
+            hydro:
+              type: integer
+              example: 200
+            wind:
+              type: integer
+              example: 200
+            gas:
+              type: integer
+              example: 200
+            geothermal:
+              type: integer
+              example: 200
+          
+    powerProductionTotal:
+      type: object
+      properties:
+        powerProductionTotal:
+          type: integer
+          example: 1324
+          
+    fossilFreePercentage:
+      type: object
+      properties:
+        fossilFreePercentage:
+          type: integer
+          example: 61
+          
+    renewablePercentage:
+      type: object
+      properties:
+        renewablePercentage:
+          type: integer
+          example: 61
+    
+            
+    Pet:
+      type: object
+      discriminator:
+        propertyName: petType
+      properties:
+        name:
+          type: string
+        petType:
+          type: string
+      required:
+      - name
+      - petType
+    Cat:  ## "Cat" will be used as the discriminator value
+      description: A representation of a cat
+      allOf:
+      - $ref: '#/components/schemas/Pet'
+      - type: object
+        properties:
+          huntingSkill:
+            type: string
+            description: The measured skill for hunting
+            enum:
+            - clueless
+            - lazy
+            - adventurous
+            - aggressive
+        required:
+        - huntingSkill
+    Dog:  ## "Dog" will be used as the discriminator value
+      description: A representation of a dog
+      allOf:
+      - $ref: '#/components/schemas/Pet'
+      - type: object
+        properties:
+          packSize:
+            type: integer
+            format: int32
+            description: the size of the pack the dog is from
+            default: 0
+            minimum: 0
+        required:
+        - packSize
+        
+  responses:
+    200latestcarbonintensity:
+      description: latest carbon intensity
+    error400zone:  
+      description: 400 Invalid zone
+    error404zone:  
+      description: 404 zone not valid for this request type
+    error500unknown:  
+      description: 500 Internal server error
