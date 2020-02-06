@@ -29,10 +29,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/zone'
         - $ref: '#/components/parameters/lat'
-        - $ref: '#/components/parameters/lon'
-        x-code-samples:
-          - lang: "JavaScript"
-            source: "console.log('Hello World');"
+        - $ref: '#/components/parameters/lon'  
+      x-code-samples:
+        - lang: PHP
+          source: "Blahblah"
 
       responses:
         200:
