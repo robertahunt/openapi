@@ -47,7 +47,7 @@ paths:
     get:
       tags: 
         - Carbon Intensity
-      summary: Get live carbon intensity
+      summary: Live
       description: |-
         This endpoint retrieves the last known carbon intensity (in gCO2eq/kWh) of electricity consumed in an area.
         
@@ -93,9 +93,9 @@ paths:
     get:
       tags: 
         - Carbon Intensity
-      summary: Get recent carbon intensity history
+      summary: Recent History
       description: |-
-        This endpoint retrieves the last 24h of carbon intensity (in gCO2eq/kWh) of an area. It can either be queried by zone identifier or by geolocation. The resolution is 15min.
+        This endpoint retrieves the last 24h of carbon intensity (in gCO2eq/kWh) of an area. It can either be queried by zone identifier or by geolocation. The resolution is hourly.
       operationId: getCarbonIntensityHistory
       parameters:
         - $ref: '#/components/parameters/zone'
@@ -135,33 +135,79 @@ paths:
     get:
       tags: 
         - Carbon Intensity
-      summary: Get historic carbon intensity values
+      summary: Past
       description: |-
-        This endpoint retrieves the carbon intensity (in gCO2eq/kWh) of an area for a specific datetime. It can either be queried by zone identifier or by geolocation. The resolution is 15min.
+        This endpoint retrieves a past carbon intensity (in gCO2eq/kWh) of an area. It can either be queried by zone identifier or by geolocation.
       operationId: getCarbonIntensityPast
       parameters:
         - $ref: '#/components/parameters/zone'
         - $ref: '#/components/parameters/lat'
         - $ref: '#/components/parameters/lon'  
+        - $ref: '#/components/parameters/datetime'  
       x-code-samples:
         - lang: Shell
           source: |- 
-            curl 'https://api.electricitymap.org/v3/carbon-intensity/history?zone=DE' -H 'auth-token: myapitoken'
+            curl 'https://api.electricitymap.org/v3/carbon-intensity/past?zone=DE&datetime=2020-01-01T00:00:00Z' -H 'auth-token: myapitoken'
         - lang: python
           source: |- 
             import requests
-            r = requests.get('https://api.electricitymap.org/v3/carbon-intensity/history?zone=DE', headers={'auth-token':'myapitoken'})
+            r = requests.get('https://api.electricitymap.org/v3/carbon-intensity/past?zone=DE&datetime=2020-01-01T00:00:00Z', headers={'auth-token':'myapitoken'})
             r.status_code, r.content
 
       responses:
         200:
-          description: Recent history of carbon intensity for specified zone
+          description: Past values of carbon intensity for specified zone
           content:
             application/json:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/zone'
-                  - $ref: '#/components/schemas/carbonIntensityHistory'
+                  - $ref: '#/components/schemas/carbonIntensity'
+                  - $ref: '#/components/schemas/datetime'
+                  - $ref: '#/components/schemas/updatedAt'
+        400:
+          $ref: '#/components/responses/error400'
+        401: 
+          $ref: '#/components/responses/error401Forbidden'
+        404:
+          $ref: '#/components/responses/error404zone'
+        500:
+          $ref: '#/components/responses/error500unknown'
+      security:
+        - ApiKeyAuth: []
+                
+  /carbon-intensity/forecast:
+    get:
+      tags: 
+        - Carbon Intensity
+      summary: Past
+      description: |-
+        This endpoint retrieves the forecasted carbon intensity (in gCO2eq/kWh) of an area for the next 24 hours. It can either be queried by zone identifier or by geolocation.
+      operationId: getCarbonIntensityForecast
+      parameters:
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/lat'
+        - $ref: '#/components/parameters/lon'   
+      x-code-samples:
+        - lang: Shell
+          source: |- 
+            curl 'https://api.electricitymap.org/v3/carbon-intensity/forecast?zone=DE' -H 'auth-token: myapitoken'
+        - lang: python
+          source: |- 
+            import requests
+            r = requests.get('https://api.electricitymap.org/v3/carbon-intensity/forecast?zone=DE', headers={'auth-token':'myapitoken'})
+            r.status_code, r.content
+
+      responses:
+        200:
+          description: Past values of carbon intensity for specified zone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/zone'
+                  - $ref: '#/components/schemas/carbonIntensityForecast'
+                  - $ref: '#/components/schemas/updatedAt'
         400:
           $ref: '#/components/responses/error400'
         401: 
@@ -177,7 +223,7 @@ paths:
     get:
       tags: 
         - Power Production
-      summary: Get live power production intensity
+      summary: Live
       description: |
         This endpoint retrieves the last known electricity production in the zone, broken down by production type. It can either be queried by zone identifier or by geolocation.
       operationId: getLatestPowerProductionBreakdown
@@ -246,6 +292,14 @@ components:
         type: string
       description:
         The longitude of the location. Must be specified with the 'lat' parameter. If the latitude and longitude are specified instead of the zone, the zone will be determined automatically from the geographical location.
+    datetime: 
+      in: query
+      name: datetime
+      required: false
+      schema:
+        type: string
+      description:
+        The datetime in ISO format
         
   examples:
     carbonIntensity: 
@@ -283,7 +337,6 @@ components:
           format: date-time
           example: '2018-04-25T18:07:01.000Z'
           
-          
     carbonIntensityHistory:
       type: object
       properties:
@@ -294,9 +347,46 @@ components:
             allOf:
               - $ref: '#/components/schemas/carbonIntensity'
               - $ref: '#/components/schemas/datetime'
-              
-    
-    
+          example:
+            [{
+              "carbonIntensity": 143,
+              "datetime": '2018-04-25T04:00:00.000Z'
+            },{
+              "carbonIntensity": 156,
+              "datetime": '2018-04-25T05:00:00.000Z'
+            },
+            ...,
+            {
+              "carbonIntensity": 176,
+              "datetime": '2018-04-26T03:00:00.000Z'
+            }
+            ]
+          
+    carbonIntensityForecast:
+      type: object
+      properties:
+        forecast:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/carbonIntensity'
+              - $ref: '#/components/schemas/datetime'
+          example:
+            [{
+              "carbonIntensity": 143,
+              "datetime": '2020-04-25T04:00:00.000Z'
+            },{
+              "carbonIntensity": 156,
+              "datetime": '2020-04-25T05:00:00.000Z'
+            },
+            ...,
+            {
+              "carbonIntensity": 176,
+              "datetime": '2020-04-26T03:00:00.000Z'
+            }
+            ]
+          
     powerProductionBreakdown:
       type: object
       properties:
