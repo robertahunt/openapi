@@ -8,10 +8,10 @@ info:
       * where the electricity in a specific area comes from 
       * how much carbon was emitted to produce it. 
       
-    Furthermore, you can use this API to get historical data, live data and forecasts. If you have any questions, or are interested in getting access to our API, you can look at our offerings on api.electricitymap.org, or contact us:
+    Furthermore, you can use this API to get historical data, live data and forecasts. If you have any questions, or are interested in getting access to our API, you can look at our offerings on api.electricitymap.org, or contact us.
   #termsOfService: http://swagger.io/terms/
   contact:
-    name: Electricity Map
+    name: Electricity Map API Team
     email: api@electricitymap.org
     url: http://electricitymap.org
   x-logo:
@@ -46,6 +46,8 @@ paths:
         - Carbon Intensity
       summary: Live
       description: |-
+        /carbon-intensity/latest
+      
         This endpoint retrieves the last known carbon intensity (in gCO2eq/kWh) of electricity consumed in an area.
         
         It can either be queried by zone identifier or by geolocation (latitude and longitude).
@@ -90,6 +92,8 @@ paths:
         - Carbon Intensity
       summary: Recent History
       description: |-
+        /carbon-intensity/history
+        
         This endpoint retrieves the last 24h of carbon intensity (in gCO2eq/kWh) of an area. It can either be queried by zone identifier or by geolocation. The resolution is hourly.
       operationId: getCarbonIntensityHistory
       parameters:
@@ -130,6 +134,8 @@ paths:
         - Carbon Intensity
       summary: Past
       description: |-
+        /carbon-intensity/past
+        
         This endpoint retrieves a past carbon intensity (in gCO2eq/kWh) of an area. It can either be queried by zone identifier or by geolocation.
       operationId: getCarbonIntensityPast
       parameters:
@@ -173,6 +179,8 @@ paths:
         - Carbon Intensity
       summary: Forecast
       description: |-
+        /carbon-intensity/forecast
+      
         This endpoint retrieves the forecasted carbon intensity (in gCO2eq/kWh) of an area for the next 24 hours. It can either be queried by zone identifier or by geolocation.
       operationId: getCarbonIntensityForecast
       parameters:
@@ -214,6 +222,8 @@ paths:
         - Power Production
       summary: Live
       description: |
+        /power-production-breakdown/latest
+      
         This endpoint retrieves the last known electricity production in the zone, broken down by production type. It can either be queried by zone identifier or by geolocation.
       operationId: getLatestPowerProductionBreakdown
       parameters:
@@ -248,6 +258,8 @@ paths:
         - Power Production
       summary: Recent History
       description: |-
+        /power-production-breakdown/history
+        
         This endpoint retrieves the last 24h of power production breakdown of an area. It can either be queried by zone identifier or by geolocation. The resolution is hourly.
       operationId: getPowerProductionHistory
       parameters:
@@ -288,6 +300,8 @@ paths:
         - Power Production
       summary: Forecast
       description: |-
+        /power-production-breakdown/forecast
+        
         This endpoint retrieves the forecasted power production of an area for the next 24 hours. It can either be queried by zone identifier or by geolocation.
       operationId: getPowerProductionForecast
       parameters:
@@ -329,7 +343,9 @@ components:
     Api Key Authentication:
       description: |
         The API key should be included as a header in all requests:
+        
         auth-token: myapitoken
+        
         (replace 'myapitoken' with your token)
       type: apiKey
       in: header
