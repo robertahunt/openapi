@@ -30,9 +30,9 @@ paths:
         - $ref: '#/components/parameters/zone'
         - $ref: '#/components/parameters/lat'
         - $ref: '#/components/parameters/lon'
-      x-code-samples:
-        - lang: "JavaScript"
-          source: "console.log('Hello World');"
+        x-code-samples:
+          - lang: "JavaScript"
+            source: "console.log('Hello World');"
 
       responses:
         200:
