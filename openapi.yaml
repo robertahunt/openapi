@@ -22,7 +22,7 @@ info:
 #    name: Apache 2.0
 #    url: https://www.apache.org/licenses/LICENSE-2.0.html
 servers:
-  - url: http://api.electricitymap.org
+  - url: http://api.electricitymap.org/v3
 tags:
   - name: zones
     description: |
@@ -52,7 +52,7 @@ paths:
         This endpoint retrieves the last known carbon intensity (in gCO2eq/kWh) of electricity consumed in an area.
         
         It can either be queried by zone identifier or by geolocation (latitude and longitude).
-      operationId: getLatestCarbonIntensity
+      operationId: getCarbonIntensityLatest
       parameters:
         - $ref: '#/components/parameters/zone'
         - $ref: '#/components/parameters/lat'
@@ -78,6 +78,90 @@ paths:
                   - $ref: '#/components/schemas/carbonIntensity'
                   - $ref: '#/components/schemas/datetime'
                   - $ref: '#/components/schemas/updatedAt'
+        400:
+          $ref: '#/components/responses/error400'
+        401: 
+          $ref: '#/components/responses/error401Forbidden'
+        404:
+          $ref: '#/components/responses/error404zone'
+        500:
+          $ref: '#/components/responses/error500unknown'
+      security:
+        - ApiKeyAuth: []
+        
+  /carbon-intensity/history:
+    get:
+      tags: 
+        - Carbon Intensity
+      summary: Get recent carbon intensity history
+      description: |-
+        This endpoint retrieves the last 24h of carbon intensity (in gCO2eq/kWh) of an area. It can either be queried by zone identifier or by geolocation. The resolution is 15min.
+      operationId: getCarbonIntensityHistory
+      parameters:
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/lat'
+        - $ref: '#/components/parameters/lon'  
+      x-code-samples:
+        - lang: Shell
+          source: |- 
+            curl 'https://api.electricitymap.org/v3/carbon-intensity/history?zone=DE' -H 'auth-token: myapitoken'
+        - lang: python
+          source: |- 
+            import requests
+            r = requests.get('https://api.electricitymap.org/v3/carbon-intensity/history?zone=DE', headers={'auth-token':'myapitoken'})
+            r.status_code, r.content
+
+      responses:
+        200:
+          description: Recent history of carbon intensity for specified zone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/zone'
+                  - $ref: '#/components/schemas/carbonIntensityHistory'
+        400:
+          $ref: '#/components/responses/error400'
+        401: 
+          $ref: '#/components/responses/error401Forbidden'
+        404:
+          $ref: '#/components/responses/error404zone'
+        500:
+          $ref: '#/components/responses/error500unknown'
+      security:
+        - ApiKeyAuth: []
+  
+  /carbon-intensity/past:
+    get:
+      tags: 
+        - Carbon Intensity
+      summary: Get historic carbon intensity values
+      description: |-
+        This endpoint retrieves the carbon intensity (in gCO2eq/kWh) of an area for a specific datetime. It can either be queried by zone identifier or by geolocation. The resolution is 15min.
+      operationId: getCarbonIntensityPast
+      parameters:
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/lat'
+        - $ref: '#/components/parameters/lon'  
+      x-code-samples:
+        - lang: Shell
+          source: |- 
+            curl 'https://api.electricitymap.org/v3/carbon-intensity/history?zone=DE' -H 'auth-token: myapitoken'
+        - lang: python
+          source: |- 
+            import requests
+            r = requests.get('https://api.electricitymap.org/v3/carbon-intensity/history?zone=DE', headers={'auth-token':'myapitoken'})
+            r.status_code, r.content
+
+      responses:
+        200:
+          description: Recent history of carbon intensity for specified zone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/zone'
+                  - $ref: '#/components/schemas/carbonIntensityHistory'
         400:
           $ref: '#/components/responses/error400'
         401: 
@@ -122,6 +206,8 @@ paths:
           $ref: '#/components/responses/error404zone'
         500:
           $ref: '#/components/responses/error500unknown'
+      security:
+        - ApiKeyAuth: []
 
 components:
 
@@ -197,6 +283,20 @@ components:
           format: date-time
           example: '2018-04-25T18:07:01.000Z'
           
+          
+    carbonIntensityHistory:
+      type: object
+      properties:
+        history:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/carbonIntensity'
+              - $ref: '#/components/schemas/datetime'
+              
+    
+    
     powerProductionBreakdown:
       type: object
       properties:
