@@ -30,9 +30,9 @@ paths:
         - $ref: '#/components/parameters/zone'
         - $ref: '#/components/parameters/lat'
         - $ref: '#/components/parameters/lon'
-      x-code-samples: 
-        - lang: Shell
-          source: "curl 'https://api.electricitymap.org/v3/carbon-intensity/latest?zone=DE'  -H 'auth-token: myapitoken'"
+      x-code-samples:
+        - lang: "JavaScript"
+          source: "console.log('Hello World');"
 
       responses:
         200:
