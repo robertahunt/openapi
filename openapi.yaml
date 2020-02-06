@@ -24,9 +24,6 @@ info:
 servers:
   - url: http://api.electricitymap.org/v3
 tags:
-  - name: zones
-    description: |
-      Get zone related information
   - name: Carbon Intensity
     description: |
       Access latest, historical and forecasted carbon intensity data
@@ -84,8 +81,6 @@ paths:
           $ref: '#/components/responses/error401Forbidden'
         404:
           $ref: '#/components/responses/error404zone'
-        500:
-          $ref: '#/components/responses/error500unknown'
       security:
         - ApiKeyAuth: []
         
@@ -126,8 +121,6 @@ paths:
           $ref: '#/components/responses/error401Forbidden'
         404:
           $ref: '#/components/responses/error404zone'
-        500:
-          $ref: '#/components/responses/error500unknown'
       security:
         - ApiKeyAuth: []
   
@@ -171,8 +164,6 @@ paths:
           $ref: '#/components/responses/error401Forbidden'
         404:
           $ref: '#/components/responses/error404zone'
-        500:
-          $ref: '#/components/responses/error500unknown'
       security:
         - ApiKeyAuth: []
                 
@@ -180,7 +171,7 @@ paths:
     get:
       tags: 
         - Carbon Intensity
-      summary: Past
+      summary: Forecast
       description: |-
         This endpoint retrieves the forecasted carbon intensity (in gCO2eq/kWh) of an area for the next 24 hours. It can either be queried by zone identifier or by geolocation.
       operationId: getCarbonIntensityForecast
@@ -214,8 +205,6 @@ paths:
           $ref: '#/components/responses/error401Forbidden'
         404:
           $ref: '#/components/responses/error404zone'
-        500:
-          $ref: '#/components/responses/error500unknown'
       security:
         - ApiKeyAuth: []
                 
@@ -250,15 +239,94 @@ paths:
           $ref: '#/components/responses/error401Forbidden'
         404:
           $ref: '#/components/responses/error404zone'
-        500:
-          $ref: '#/components/responses/error500unknown'
+      security:
+        - ApiKeyAuth: []
+
+  /power-production-breakdown/history:
+    get:
+      tags: 
+        - Power Production
+      summary: Recent History
+      description: |-
+        This endpoint retrieves the last 24h of power production breakdown of an area. It can either be queried by zone identifier or by geolocation. The resolution is hourly.
+      operationId: getPowerProductionHistory
+      parameters:
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/lat'
+        - $ref: '#/components/parameters/lon'  
+      x-code-samples:
+        - lang: Shell
+          source: |- 
+            curl 'https://api.electricitymap.org/v3/power-production-breakdown/history?zone=DE' -H 'auth-token: myapitoken'
+        - lang: python
+          source: |- 
+            import requests
+            r = requests.get('https://api.electricitymap.org/v3/power-production-breakdown/history?zone=DE', headers={'auth-token':'myapitoken'})
+            r.status_code, r.content
+
+      responses:
+        200:
+          description: Recent history of power production for specified zone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/zone'
+                  - $ref: '#/components/schemas/powerProductionHistory'
+        400:
+          $ref: '#/components/responses/error400'
+        401: 
+          $ref: '#/components/responses/error401Forbidden'
+        404:
+          $ref: '#/components/responses/error404zone'
+      security:
+        - ApiKeyAuth: []
+                
+  /power-production-breakdown/forecast:
+    get:
+      tags: 
+        - Power Production
+      summary: Forecast
+      description: |-
+        This endpoint retrieves the forecasted power production of an area for the next 24 hours. It can either be queried by zone identifier or by geolocation.
+      operationId: getPowerProductionForecast
+      parameters:
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/lat'
+        - $ref: '#/components/parameters/lon'   
+      x-code-samples:
+        - lang: Shell
+          source: |- 
+            curl 'https://api.electricitymap.org/v3/power-production-breakdown/forecast?zone=DE' -H 'auth-token: myapitoken'
+        - lang: python
+          source: |- 
+            import requests
+            r = requests.get('https://api.electricitymap.org/v3/power-production-breakdown/forecast?zone=DE', headers={'auth-token':'myapitoken'})
+            r.status_code, r.content
+
+      responses:
+        200:
+          description: Past values of carbon intensity for specified zone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/zone'
+                  - $ref: '#/components/schemas/powerProductionForecast'
+                  - $ref: '#/components/schemas/updatedAt'
+        400:
+          $ref: '#/components/responses/error400'
+        401: 
+          $ref: '#/components/responses/error401Forbidden'
+        404:
+          $ref: '#/components/responses/error404zone'
       security:
         - ApiKeyAuth: []
 
 components:
 
   securitySchemes:
-    ApiKeyAuth:
+    Api Key Authentication:
       description: |
         The API key should be included as a header in all requests:
         auth-token: myapitoken
@@ -281,7 +349,7 @@ components:
       name: lat
       required: false
       schema:
-        type: string
+        type: number
       description:
         The latitude of the location. Must be specified with the 'lon' parameter. If the latitude and longitude are specified instead of the zone, the zone will be determined automatically from the geographical location. Required if zone is not specified.
     lon: 
@@ -289,7 +357,7 @@ components:
       name: lon
       required: false
       schema:
-        type: string
+        type: number
       description:
         The longitude of the location. Must be specified with the 'lat' parameter. If the latitude and longitude are specified instead of the zone, the zone will be determined automatically from the geographical location.
     datetime: 
@@ -362,6 +430,61 @@ components:
             }
             ]
           
+    powerProductionHistory:
+      type: object
+      properties:
+        history:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/carbonIntensity'
+              - $ref: '#/components/schemas/datetime'
+          example:
+            [
+        {
+            "datetime": "2018-04-24T19:00:00.000Z",
+            "fossilFreePercentage": 75,
+            "powerConsumptionBreakdown": {
+                "biomass": 81,
+                "coal": 395,
+                "gas": 213,
+                "geothermal": 0,
+                "hydro": 521,
+                "hydro discharge": 0,
+                "battery discharge": null,
+                "nuclear": 0,
+                "oil": 9,
+                "solar": 2,
+                "unknown": 10,
+                "wind": 1288
+            },
+            "powerConsumptionTotal": 2519,
+            "renewablePercentage": 75
+        },
+        ...,
+        {
+            "datetime": "2018-04-25T18:45:00.000Z",
+            "fossilFreePercentage": 72,
+            "powerConsumptionBreakdown": {
+                "biomass": 101,
+                "coal": 494,
+                "gas": 255,
+                "geothermal": 0,
+                "hydro": 212,
+                "hydro discharge": 0,
+                "battery discharge": null,
+                "nuclear": 0,
+                "oil": 11,
+                "solar": 3,
+                "unknown": 4,
+                "wind": 1607
+            },
+            "powerConsumptionTotal": 2687,
+            "renewablePercentage": 72
+        }
+    ]
+          
     carbonIntensityForecast:
       type: object
       properties:
@@ -385,7 +508,65 @@ components:
               "carbonIntensity": 176,
               "datetime": '2020-04-26T03:00:00.000Z'
             }
-            ]
+            ]          
+            
+    powerProductionForecast:
+      type: object
+      properties:
+        forecast:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/powerProductionBreakdown'
+              - $ref: '#/components/schemas/datetime'
+          example:
+            [
+                {
+                  "powerProductionBreakdown": {
+                    "biomass": 483,
+                    "coal": 475,
+                    "gas": 338,
+                    "hydro": 632,
+                    "nuclear": 383,
+                    "solar": 4,
+                    "wind": 188,
+                    "unknown": 69
+                  },
+                  "datetime": "2018-11-26T17:00:00.000Z",
+                  "powerProductionTotal": 2572
+                },
+                {
+                  "powerProductionBreakdown": {
+                    "biomass": 459,
+                    "coal": 441,
+                    "gas": 308,
+                    "hydro": 639,
+                    "nuclear": 382,
+                    "solar": 0,
+                    "wind": 167,
+                    "unknown": 68
+                  },
+                  "datetime": "2018-11-26T18:00:00.000Z",
+                  "powerProductionTotal": 2464
+                },
+                ...,
+                {
+                  "powerProductionBreakdown": {
+                    "biomass": 158,
+                    "coal": 652,
+                    "gas": 385,
+                    "hydro": 326,
+                    "nuclear": 169,
+                    "solar": 44,
+                    "wind": 210,
+                    "unknown": 36
+                  },
+                  "datetime": "2018-11-27T17:00:00.000Z",
+                  "powerProductionTotal": 1980
+                }
+              ]
+
           
     powerProductionBreakdown:
       type: object
@@ -451,7 +632,7 @@ components:
               error:
                 type: string
                 description: error message
-                example: 'Zone "OZ" does not exist'
+                example: "Zone 'OZ' does not exist"
     error401Forbidden:
       description: Forbidden. API key not recognized for this request.
       content:
