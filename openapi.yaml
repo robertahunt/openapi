@@ -31,8 +31,8 @@ paths:
         - $ref: '#/components/parameters/lat'
         - $ref: '#/components/parameters/lon'
       x-code-samples: 
-        lang: Shell
-        source: "curl 'https://api.electricitymap.org/v3/carbon-intensity/latest?zone=DE'  -H 'auth-token: myapitoken'"
+        - lang: Shell
+          source: "curl 'https://api.electricitymap.org/v3/carbon-intensity/latest?zone=DE'  -H 'auth-token: myapitoken'"
 
       responses:
         200:
